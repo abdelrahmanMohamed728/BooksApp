@@ -1,9 +1,18 @@
+import 'package:booksapp/Item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 void main() => runApp(MyApp());
 
-class MyApp extends StatelessWidget {
+class MyApp extends StatefulWidget {
+  @override
+  State<StatefulWidget> createState() {
+    // TODO: implement createState
+    return _MyAppState();
+  }
+}
+
+class _MyAppState extends State<MyApp> {
   List<String> list = [
     'http://books.google.com/books/content?id=Rgg0AQAAMAAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
     'http://books.google.com/books/content?id=fiBbdJ1sdA8C&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
@@ -16,6 +25,10 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         title: 'Flutter Demo',
+        initialRoute: 'main',
+        routes: {
+          'item': (context) => Item(),
+        },
         theme: ThemeData(
           primarySwatch: Colors.grey,
         ),
@@ -92,12 +105,21 @@ class MyApp extends StatelessWidget {
                                   )
                                 ],
                               ),
-                              child: new ClipRRect(
+                              child: GestureDetector(
+                                child: new ClipRRect(
                                   borderRadius: new BorderRadius.circular(25.0),
-                                  child: Image.network(list[i],
-                                      width: 100,
-                                      height: 150,
-                                      fit: BoxFit.fill)),
+                                  child: Hero(
+                                    child: Image.network(list[i],
+                                        width: 100,
+                                        height: 150,
+                                        fit: BoxFit.fill),
+                                    tag: 'icon '+i.toString(),
+                                  ),
+                                ),
+                                onTap: () {
+                                  Navigator.of(context).pushNamed('item');
+                                },
+                              ),
                             ),
                             Padding(
                               padding: const EdgeInsets.only(top: 10.0),
