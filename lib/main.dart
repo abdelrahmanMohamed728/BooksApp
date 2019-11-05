@@ -1,6 +1,10 @@
+import 'package:booksapp/Book.dart';
 import 'package:booksapp/Item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:http/http.dart' as http;
+import 'dart:async';
+import 'dart:convert';
 
 void main() => runApp(MyApp());
 
@@ -13,26 +17,41 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  List<String> list = [
-    'http://books.google.com/books/content?id=Rgg0AQAAMAAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
-    'http://books.google.com/books/content?id=fiBbdJ1sdA8C&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
-    'http://books.google.com/books/content?id=8CSFs_Usw8MC&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api',
-    'http://books.google.com/books/content?id=z9M1AAAAMAAJ&printsec=frontcover&img=1&zoom=1&edge=curl&source=gbs_api'
-  ];
+  List<Book> list = [];
+  String s = '';
 
+  Future getQuote() async {
+    String url = 'https://www.googleapis.com/books/v1/volumes?q='+s;
+    final response =
+        await http.get(url, headers: {"Accept": "application/json"});
+
+    if (response.statusCode == 200) {
+      setState(() {
+        var map = json.decode(response.body);
+        list = (map['items'] as List).map((p) => Book.fromJson(p)).toList();
+      });
+
+      return Book.fromJson(json.decode(response.body)['items']);
+    } else {
+      throw Exception('Failed to load post');
+    }
+  }
+@override
+  void initState() {
+
+    // TODO: implement initState
+    super.initState();
+  }
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
         title: 'Flutter Demo',
-        initialRoute: 'main',
-        routes: {
-          'item': (context) => Item(),
-        },
         theme: ThemeData(
           primarySwatch: Colors.grey,
         ),
         home: Scaffold(
+            resizeToAvoidBottomInset : false,
             body: Column(
           children: <Widget>[
             Container(
@@ -64,6 +83,12 @@ class _MyAppState extends State<MyApp> {
                 decoration: InputDecoration(
                     hintText: 'Search by book or author',
                     prefixIcon: Icon(Icons.search)),
+                onChanged: (text) {
+                  setState(() {
+                    s = text;
+                    getQuote();
+                  });
+                },
               ),
             ),
             Container(
@@ -109,25 +134,33 @@ class _MyAppState extends State<MyApp> {
                                 child: new ClipRRect(
                                   borderRadius: new BorderRadius.circular(25.0),
                                   child: Hero(
-                                    child: Image.network(list[i],
+                                    child: Image.network(list[i].link,
                                         width: 100,
                                         height: 150,
                                         fit: BoxFit.fill),
-                                    tag: 'icon '+i.toString(),
+                                    tag: 'icon ' + i.toString(),
                                   ),
                                 ),
                                 onTap: () {
-                                  Navigator.of(context).pushNamed('item');
+                                  Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => Item(list[i]),
+                                      ));
                                 },
                               ),
                             ),
                             Padding(
                               padding: const EdgeInsets.only(top: 10.0),
-                              child: Text(
-                                'book ',
-                                style: TextStyle(
-                                    fontSize: 15, fontFamily: 'Roboto'),
-                              ),
+
+                                child: Text(
+                                  list[i].name,
+                                  style: TextStyle(
+                                      fontSize: 15, fontFamily: 'Roboto',),
+
+                                ),
+
+
                             ),
                             Padding(
                               padding: const EdgeInsets.only(top: 10.0),
